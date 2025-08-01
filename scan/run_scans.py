@@ -1,5 +1,5 @@
-from scan.scan_stocks import scan_stocks
-from scan.scan_crypto import scan_crypto
+from scan_stocks import scan_stocks
+from scan_crypto import scan_crypto
 
 def run_all_scans():
     stock_symbols = ["TSLA", "NVDA", "AAPL", "GME", "PLTR"]
