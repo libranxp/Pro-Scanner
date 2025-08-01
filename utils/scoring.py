@@ -34,3 +34,36 @@ def score_equity_alert(symbol: str, raw_data: dict) -> dict:
         "atr": "N/A",
         "note": "Pre-market volume surge detected"
     }
+def score_crypto_alert(symbol: str, core: dict, sentiment: dict) -> dict:
+    cmc = core["cmc"]["data"][symbol]
+    sentiment_score = sentiment["santiment"].get("score", 50)
+
+    confidence = 0
+    tier = "N/A"
+
+    if cmc["quote"]["USD"]["percent_change_24h"] > 5:
+        confidence += 30
+    if sentiment_score > 60:
+        confidence += 30
+
+    tier = "High" if confidence >= 80 else "Medium" if confidence >= 60 else "Low"
+    confidence_emoji = "🚀" if confidence >= 80 else "🌥️" if confidence >= 60 else "🔍"
+
+    return {
+        "symbol": symbol,
+        "strategy": "Volatility Play",
+        "entry": cmc["quote"]["USD"]["price"],
+        "tp": cmc["quote"]["USD"]["price"] * 1.08,
+        "sl": cmc["quote"]["USD"]["price"] * 0.95,
+        "confidence": confidence,
+        "tier": tier,
+        "confidence_emoji": confidence_emoji,
+        "sentiment": sentiment_score,
+        "bias": "Bullish" if sentiment_score > 60 else "Neutral",
+        "catalyst": "Network Upgrade",
+        "float": "N/A",
+        "rel_vol": "N/A",
+        "rsi": "N/A",
+        "atr": "N/A",
+        "note": "Spike in on-chain mentions"
+    }
