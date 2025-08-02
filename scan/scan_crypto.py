@@ -1,3 +1,6 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from fetch.fetch_crypto_data import fetch_crypto_data
 from fetch.fetch_sentiment_catalyst import fetch_sentiment_and_catalyst
 from dispatch.dispatch_telegram import send_telegram
