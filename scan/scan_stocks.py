@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from fetch.fetch_stock_data import fetch_stock_data
-from dispatch.dispatch_telegram import send_telegram
+from dispatch.dispatch_telegram import send_telegram_message
 from dispatch.dispatch_discord import send_discord
 from dispatch.alert_formatter import format_alert
 from utils.scoring import score_equity_alert
