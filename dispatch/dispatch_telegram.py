@@ -1,24 +1,34 @@
+import sys
 import os
+
+# Add root directory to sys.path to access dispatch.alert_formatter
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from dispatch.alert_formatter import format_alert
 import requests
-from alert_formatter import format_alert
 
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+def send_telegram_message(message: str):
+    token = os.getenv("TELEGRAM_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID")
 
-def send_telegram_message(message):
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    if not token or not chat_id:
+        print("[Telegram] Missing TELEGRAM_TOKEN or TELEGRAM_CHAT_ID.")
+        return
+
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
     payload = {
-        "chat_id": TELEGRAM_CHAT_ID,
+        "chat_id": chat_id,
         "text": message,
         "parse_mode": "Markdown"
     }
-    res = requests.post(url, json=payload)
-    print(f"[Debug] Telegram response status: {res.status_code}")
-    res.raise_for_status()
 
-def dispatch_alerts(validated_alerts):
-    for asset in validated_alerts:
-        print(f"[Debug] Dispatching alert for: {asset['symbol']} to Telegram")
-        message = format_alert(asset)
-        send_telegram_message(message)
+    try:
+        response = requests.post(url, json=payload)
+        if response.status_code != 200:
+            print(f"[Telegram] Failed to send message: {response.text}")
+        else:
+            print("[Telegram] Message sent successfully.")
+    except Exception as e:
+        print(f"[Telegram] Error sending message: {e}")
+
 
