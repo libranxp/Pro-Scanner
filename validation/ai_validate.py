@@ -2,7 +2,7 @@ import sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import json
 from validation.reasoning_builder import generate_reasoning
-from dispatch.dispatch_telegram import send_telegram
+from dispatch.dispatch_telegram import send_telegram_message
 
 def load_alerts():
     with open("logs/scan_history.json") as f:
