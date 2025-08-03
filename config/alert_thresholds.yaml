@@ -1,1 +1,11 @@
+crypto:
+  tech: 40
+  sentiment: 30
+  liquidity: 15
+  risk: 15
+stocks:
+  tech: 35
+  sentiment: 25
+  catalyst: 25
+  volume: 15
 
