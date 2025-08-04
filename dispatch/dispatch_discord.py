@@ -1,6 +1,6 @@
 import os
 import requests
-from alert_formatter import format_alert
+from dispatch.alert_formatter import format_alert
 
 DISCORD_STOCK_WEBHOOK = os.getenv("DISCORD_STOCK_WEBHOOK")
 DISCORD_CRYPTO_WEBHOOK = os.getenv("DISCORD_CRYPTO_WEBHOOK")
@@ -20,3 +20,5 @@ def dispatch_alerts(validated_alerts):
             else DISCORD_CRYPTO_WEBHOOK
         )
         send_discord_message(webhook, message)
+import sys, os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
