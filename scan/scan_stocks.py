@@ -26,5 +26,3 @@ def scan_stock_assets(symbols: list):
                 send_discord(formatted, "stock")
         except Exception as e:
             send_telegram_message(f"[STOCK SCAN ERROR] {symbol}: {e}", "admin")
-
-
