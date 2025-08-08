@@ -1,1 +1,38 @@
-
+<!DOCTYPE html>
+<html>
+<head>
+  <title>EmeraldAlert Dashboard</title>
+  <style>
+    body { font-family: Arial; background: #111; color: #eee; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px; border: 1px solid #444; }
+    th { background: #222; }
+  </style>
+</head>
+<body>
+  <h1>EmeraldAlert Dashboard</h1>
+  <table id="alerts">
+    <thead>
+      <tr><th>Ticker</th><th>Price</th><th>Confidence</th><th>Risk</th><th>Timestamp</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <script>
+    fetch("dashboard_data.json")
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.querySelector("#alerts tbody");
+        data.forEach(alert => {
+          const row = `<tr>
+            <td>${alert.ticker}</td>
+            <td>${alert.price}</td>
+            <td>${alert.confidence}%</td>
+            <td>${alert.risk}</td>
+            <td>${alert.timestamp}</td>
+          </tr>`;
+          tbody.innerHTML += row;
+        });
+      });
+  </script>
+</body>
+</html>
