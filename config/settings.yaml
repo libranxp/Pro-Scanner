@@ -1,0 +1,4 @@
+scan:
+  interval_minutes: 45
+  min_confidence: 70
+  max_alerts: 25
