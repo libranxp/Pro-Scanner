@@ -1,2 +1,11 @@
-[]
+# logs/failed_dispatches.json
+# This file logs failed alert dispatches. Example:
+[
+  {
+    "timestamp": "2025-08-08T13:00:00Z",
+    "channel": "Telegram",
+    "ticker": "BTCUSDT",
+    "error": "403 Forbidden"
+  }
+]
 
