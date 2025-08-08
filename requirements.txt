@@ -1,4 +1,7 @@
 requests
-python-dotenv       
-pytz               
-schedule            
+pandas
+numpy
+openai
+PyYAML
+scikit-learn
+matplotlib
