@@ -1,14 +1,22 @@
 # alerts/discord.py
 import requests
 import os
-
-WEBHOOKS = {
-    "crypto": os.environ["DISCORD_CRYPTO_WEBHOOK"],
-    "stock": os.environ["DISCORD_STOCK_WEBHOOK"],
-}
+from utils.logger import log
 
 def send_discord_alert(message, asset_type):
-    webhook_url = WEBHOOKS.get(asset_type, os.environ["DISCORD_ADMIN_ERRORS_WEBHOOK"])
-    payload = {"content": message}
-    requests.post(webhook_url, json=payload)
+    webhook = {
+        "crypto": os.getenv("DISCORD_CRYPTO_WEBHOOK"),
+        "stock": os.getenv("DISCORD_STOCK_WEBHOOK"),
+    }.get(asset_type)
+
+    if not webhook:
+        raise ValueError("Missing Discord webhook for asset type")
+
+    payload = {
+        "content": message
+    }
+
+    response = requests.post(webhook, json=payload)
+    if response.status_code >= 400:
+        raise Exception(f"Discord error: {response.text}")
 
