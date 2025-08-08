@@ -2,7 +2,7 @@
 import sys
 from core.execution_plan import run_scan
 from alerts.alert_formatter import format_alert
-from alerts.telegram import send_telegram_alert, send_admin_message, check_for_commands
+from alerts.telegram import send_telegram_alert, send_admin_message
 from alerts.discord import send_discord_alert
 from utils.logger import log
 import os
@@ -18,14 +18,13 @@ def report_admin_error(message):
 
 def main():
     try:
-        # Check for Telegram command
-        command = check_for_commands()
-        force_send = "--force" in sys.argv or command == "scan"
-        dry_run = "--dry" in sys.argv or command == "dry"
+        log("🚀 Starting EmeraldAlert diagnostic scan...")
 
-        log("🚀 Starting EmeraldAlert scan...")
+        # Send test messages to confirm delivery
+        send_admin_message("🧪 EmeraldAlert test message: Telegram is working.")
+        send_discord_alert("🧪 EmeraldAlert test message: Discord is working.", "stock")
+
         alerts = run_scan()
-
         log(f"📊 Raw alerts: {alerts}")
 
         if not alerts:
@@ -33,23 +32,13 @@ def main():
             send_admin_message("⚠️ No alerts found in this scan.")
             return
 
-        log(f"🔍 Found {len(alerts)} alert(s). Evaluating...")
+        log(f"🔍 Found {len(alerts)} alert(s). Dispatching...")
 
         for alert in alerts:
             ticker = alert.get("ticker", "UNKNOWN")
             confidence = alert.get("confidence", 0)
-
-            if not force_send and confidence < 70:
-                log(f"⏭️ Skipping {ticker} — confidence too low ({confidence}%)")
-                continue
-
             message = format_alert(alert)
             asset_type = "crypto" if "USDT" in ticker else "stock"
-
-            if dry_run:
-                log(f"[DRY RUN] Would send alert for {ticker}: {message}")
-                send_admin_message(f"[DRY RUN] Would send alert for {ticker}")
-                continue
 
             try:
                 send_telegram_alert(message, asset_type)
