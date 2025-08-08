@@ -1,12 +1,18 @@
+# utils/retry.py
 import time
-import requests
+import functools
 
-def safe_request(url, headers=None, params=None, retries=3, delay=2):
-    for i in range(retries):
-        try:
-            response = requests.get(url, headers=headers, params=params, timeout=10)
-            if response.status_code == 200:
-                return response.json()
-        except Exception as e:
-            time.sleep(delay)
-    return {}
+def retry(max_attempts=3, delay=2):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            for attempt in range(max_attempts):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    if attempt < max_attempts - 1:
+                        time.sleep(delay)
+                    else:
+                        raise e
+        return wrapper
+    return decorator
