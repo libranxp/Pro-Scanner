@@ -1,0 +1,10 @@
+crypto:
+  volume_min: 500000
+  percent_change_min: 10
+  market_cap_min: 10000000
+
+stocks:
+  volume_min: 1000000
+  percent_change_min: 5
+  float_max: 50000000
+  short_interest_min: 15
