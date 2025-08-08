@@ -1,17 +1,14 @@
 # alerts/alert_formatter.py
-def format_alert(asset, reason):
+def format_alert(data):
     return f"""
-🚨 [ALERT] — ${asset['ticker']}
+🚨 *{data['ticker']}* — {data['risk']} Risk
 
-📈 Price: {asset['price']} ({asset['change']}%)
-📊 Volume Spike: RVOL {asset['volume']}
-📍 Entry: {asset['entry']} | Stop: {asset['stop']} | Target: {asset['target']}
-
-📌 Technicals: {asset['technicals']}
-🧠 AI Reason: {reason}
-📣 Catalyst: {asset['catalyst']}
-📊 Sentiment: {asset['sentiment']}
-
-📅 Timestamp: {asset['timestamp']}
-🔗 [View Chart]({asset['chart_url']})
+💲 *Price:* {data['price']} | *Change:* {data['change']}%
+📍 *Entry:* {data['entry']} | *Stop:* {data['stop']} | *Target:* {data['target']}
+📊 *Volume Spike:* {data['volume']} | *Confidence:* {data['confidence']}%
+📈 *Technicals:* {data['technicals']}
+📰 *Catalyst:* {data['catalyst']}
+🔥 *Sentiment:* {data['sentiment']}
+📅 *Timestamp:* {data['timestamp']}
+🔗 [Chart]({data['chart_url']})
 """.strip()
