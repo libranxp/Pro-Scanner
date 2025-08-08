@@ -1,57 +1,53 @@
 # main.py
-import sys
-from core.execution_plan import run_scan
-from alerts.alert_formatter import format_alert
-from alerts.telegram import send_telegram_alert, send_admin_message
-from alerts.discord import send_discord_alert
-from utils.logger import log
 import os
-import requests
-
-def report_admin_error(message):
-    webhook = os.getenv("DISCORD_ADMIN_ERRORS_WEBHOOK")
-    if webhook:
-        try:
-            requests.post(webhook, json={"content": f"🚨 EmeraldAlert Error:\n{message}"})
-        except Exception as e:
-            log(f"❌ Failed to report admin error: {e}")
+import sys
+from datetime import datetime
+from alerts.scanner import scan_markets
+from alerts.validator import validate_alerts
+from alerts.formatter import format_alert
+from dispatch.telegram_dispatcher import send_telegram_message
+from dispatch.discord_dispatcher import send_discord_alert  # Optional
+from utils.logger import log  # If you have a logging utility
 
 def main():
-    try:
-        log("🚀 Starting EmeraldAlert diagnostic scan...")
+    force_send = "--force" in sys.argv
+    dry_run = "--dry" in sys.argv
 
-        # Send test messages to confirm delivery
-        send_admin_message("🧪 EmeraldAlert test message: Telegram is working.")
-        send_discord_alert("🧪 EmeraldAlert test message: Discord is working.", "stock")
+    log("🚀 EmeraldAlert scan started.")
+    raw_alerts = scan_markets()
+    log(f"📊 Raw alerts found: {len(raw_alerts)}")
 
-        alerts = run_scan()
-        log(f"📊 Raw alerts: {alerts}")
+    validated = validate_alerts(raw_alerts)
+    log(f"✅ Validated alerts: {len(validated)}")
 
-        if not alerts:
-            log("⚠️ No qualifying alerts found.")
-            send_admin_message("⚠️ No alerts found in this scan.")
-            return
+    if not validated:
+        send_telegram_message("admin", "⚠️ No qualifying alerts found.")
+        return
 
-        log(f"🔍 Found {len(alerts)} alert(s). Dispatching...")
+    for alert in validated:
+        ticker = alert.get("ticker", "UNKNOWN")
+        confidence = alert.get("confidence", 0)
+        asset_type = alert.get("type", "stocks")  # "crypto" or "stocks"
+        message = format_alert(alert)
 
-        for alert in alerts:
-            ticker = alert.get("ticker", "UNKNOWN")
-            confidence = alert.get("confidence", 0)
-            message = format_alert(alert)
-            asset_type = "crypto" if "USDT" in ticker else "stock"
+        if not force_send and confidence < 70:
+            log(f"⏭️ Skipping {ticker} — confidence too low ({confidence}%)")
+            continue
 
-            try:
-                send_telegram_alert(message, asset_type)
-                send_discord_alert(message, asset_type)
-                log(f"✅ Alert sent for {ticker}")
-            except Exception as e:
-                log(f"❌ Failed to send alert for {ticker}: {e}")
-                report_admin_error(f"Failed to send alert for {ticker}: {e}")
+        if dry_run:
+            log(f"[DRY RUN] Would send alert for {ticker}")
+            send_telegram_message("debug", f"[DRY RUN] {message}")
+            continue
 
-    except Exception as e:
-        log(f"🔥 Fatal error: {e}")
-        report_admin_error(f"Fatal error in EmeraldAlert: {e}")
-        send_admin_message(f"🔥 Fatal error: {e}")
+        try:
+            send_telegram_message(asset_type, message)
+            send_discord_alert(message, asset_type)  # Optional
+            log(f"✅ Alert sent for {ticker}")
+        except Exception as e:
+            log(f"❌ Failed to send alert for {ticker}: {e}")
+            send_telegram_message("admin", f"❌ Alert failed for {ticker}: {e}")
+
+    log("✅ EmeraldAlert scan complete.")
 
 if __name__ == "__main__":
     main()
