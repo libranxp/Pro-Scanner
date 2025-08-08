@@ -1,17 +1,16 @@
 # main.py
-from scan.crypto_spi import run_crypto_scan
-from scan.stock_spi import run_stock_scan
-from core.execution_plan import should_run_scan
-from utils.logger import log_info
+from core.execution_plan import run_scan
+from alerts.alert_formatter import format_alert
+from alerts.telegram import send_telegram_alert
+from alerts.discord import send_discord_alert
 
 def main():
-    if should_run_scan():
-        log_info("Starting EmeraldAlert scan...")
-        run_crypto_scan()
-        run_stock_scan()
-        log_info("Scan completed successfully.")
-    else:
-        log_info("Scan skipped based on execution plan.")
+    alerts = run_scan()
+    for alert in alerts:
+        message = format_alert(alert)
+        asset_type = "crypto" if "USDT" in alert["ticker"] else "stock"
+        send_telegram_alert(message, asset_type)
+        send_discord_alert(message, asset_type)
 
 if __name__ == "__main__":
     main()
