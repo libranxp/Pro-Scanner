@@ -1,2 +1,10 @@
-[]
-
+# logs/scan_history.json
+# This file is written to by the scanner. Example structure:
+[
+  {
+    "timestamp": "2025-08-08T14:00:00Z",
+    "alerts": 12,
+    "crypto": 7,
+    "stocks": 5
+  }
+]
