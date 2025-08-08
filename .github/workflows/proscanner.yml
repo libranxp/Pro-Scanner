@@ -1,0 +1,49 @@
+name: ProScanner Unified Workflow
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"  # Every 30 minutes
+  workflow_dispatch:
+
+concurrency:
+  group: proscanner-unified
+  cancel-in-progress: true
+
+jobs:
+  scan-and-alert:
+    runs-on: ubuntu-latest
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CRYPTO_CHANNEL_ID: ${{ secrets.TELEGRAM_CRYPTO_CHANNEL_ID }}
+      TELEGRAM_STOCK_CHANNEL_ID: ${{ secrets.TELEGRAM_STOCK_CHANNEL_ID }}
+      TELEGRAM_ADMIN_CHANNEL_ID: ${{ secrets.TELEGRAM_ADMIN_CHANNEL_ID }}
+      TELEGRAM_DEBUG_CHANNEL_ID: ${{ secrets.TELEGRAM_DEBUG_CHANNEL_ID }}
+      DISCORD_CRYPTO_WEBHOOK: ${{ secrets.DISCORD_CRYPTO_WEBHOOK }}
+      DISCORD_STOCK_WEBHOOK: ${{ secrets.DISCORD_STOCK_WEBHOOK }}
+      DISCORD_ADMIN_ERRORS_WEBHOOK: ${{ secrets.DISCORD_ADMIN_ERRORS_WEBHOOK }}
+      CMC_KEY: ${{ secrets.CMC_KEY }}
+      COINGLASS_KEY: ${{ secrets.COINGLASS_KEY }}
+      LUNARCRUSH_KEY: ${{ secrets.LUNARCRUSH_KEY }}
+      FINNHUB_KEY: ${{ secrets.FINNHUB_KEY }}
+      FMP_KEY: ${{ secrets.FMP_KEY }}
+      ALPHAVANTAGE_KEY: ${{ secrets.ALPHAVANTAGE_KEY }}
+      MESSARI_KEY: ${{ secrets.MESSARI_KEY }}
+      SANTIMENT_KEY: ${{ secrets.SANTIMENT_KEY }}
+
+    steps:
+      - name: 📥 Checkout Pro-Scanner repo
+        uses: actions/checkout@v3
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: 📦 Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: 🔍 Run Scan (optional)
+        run: python scan.py  # Only if you use a separate scan script
+
+      - name: 🚨 Run EmeraldAlert
+        run: python main.py --force
