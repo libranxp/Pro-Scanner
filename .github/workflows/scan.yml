@@ -1,57 +1,45 @@
-name: EmeraldAlert Scans
+name: EmeraldAlert Scanner
 
 on:
   schedule:
-    - cron: '0 * * * *'  # ⏰ Every hour, on the hour
-  workflow_dispatch:        # Manual trigger option
+    - cron: '*/45 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: scanner-job
+  cancel-in-progress: true
 
 jobs:
-  scan:
+  run-scan:
     runs-on: ubuntu-latest
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CRYPTO_CHANNEL_ID: ${{ secrets.TELEGRAM_CRYPTO_CHANNEL_ID }}
+      TELEGRAM_STOCK_CHANNEL_ID: ${{ secrets.TELEGRAM_STOCK_CHANNEL_ID }}
+      TELEGRAM_ADMIN_CHANNEL_ID: ${{ secrets.TELEGRAM_ADMIN_CHANNEL_ID }}
+      DISCORD_CRYPTO_WEBHOOK: ${{ secrets.DISCORD_CRYPTO_WEBHOOK }}
+      DISCORD_STOCK_WEBHOOK: ${{ secrets.DISCORD_STOCK_WEBHOOK }}
+      DISCORD_ADMIN_ERRORS_WEBHOOK: ${{ secrets.DISCORD_ADMIN_ERRORS_WEBHOOK }}
+      COINMARKETCAP_API_KEY: ${{ secrets.CMC_KEY }}
+      COINGLASS_KEY: ${{ secrets.COINGLASS_KEY }}
+      LUNARCRUSH_KEY: ${{ secrets.LUNARCRUSH_KEY }}
+      FINNHUB_KEY: ${{ secrets.FINNHUB_KEY }}
+      FMP_KEY: ${{ secrets.FMP_KEY }}
+      ALPHAVANTAGE_KEY: ${{ secrets.ALPHAVANTAGE_KEY }}
+      MESSARI_KEY: ${{ secrets.MESSARI_KEY }}
+      SANTIMENT_KEY: ${{ secrets.SANTIMENT_KEY }}
 
     steps:
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
-      - name: Run scans
-        env:
-          # 📊 Stock APIs
-          ALPHAVANTAGE_KEY: ${{ secrets.ALPHAVANTAGE_KEY }}
-          FINNHUB_KEY: ${{ secrets.FINNHUB_KEY }}
-          FMP_KEY: ${{ secrets.FMP_KEY }}
-
-          # 🪙 Crypto APIs
-          LUNARCRUSH_API_KEY: ${{ secrets.LUNARCRUSH_KEY }}
-          CMCAL_KEY: ${{ secrets.CMCAL_KEY }}
-          CMC_KEY: ${{ secrets.CMC_KEY }}
-          MESSARI_KEY: ${{ secrets.MESSARI_KEY }}
-          SANTIMENT_KEY: ${{ secrets.SANTIMENT_KEY }}
-
-          # 📣 Telegram Dispatch
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          TELEGRAM_ADMIN_CHANNEL_ID: ${{ secrets.TELEGRAM_ADMIN_CHANNEL_ID }}
-          TELEGRAM_CRYPTO_CHANNEL_ID: ${{ secrets.TELEGRAM_CRYPTO_CHANNEL_ID }}
-          TELEGRAM_DEV_CHANNEL_ID: ${{ secrets.TELEGRAM_DEV_CHANNEL_ID }}
-          TELEGRAM_STOCK_CHANNEL_ID: ${{ secrets.TELEGRAM_STOCK_CHANNEL_ID }}
-
-          # 🧵 Discord Webhooks
-          DISCORD_ADMIN_ERRORS_WEBHOOK: ${{ secrets.DISCORD_ADMIN_ERRORS_WEBHOOK }}
-          DISCORD_CATALYST_WEBHOOK: ${{ secrets.DISCORD_CATALYST_WEBHOOK }}
-          DISCORD_CRYPTO_WEBHOOK: ${{ secrets.DISCORD_CRYPTO_WEBHOOK }}
-          DISCORD_HOTLIST_WEBHOOK: ${{ secrets.DISCORD_HOTLIST_WEBHOOK }}
-          DISCORD_SENTIMENT_WEBHOOK: ${{ secrets.DISCORD_SENTIMENT_WEBHOOK }}
-          DISCORD_STATUS_WEBHOOK: ${{ secrets.DISCORD_STATUS_WEBHOOK }}
-          DISCORD_STOCK_WEBHOOK: ${{ secrets.DISCORD_STOCK_WEBHOOK }}
-
-        run: |
-          python scan/run_scans.py
+      - name: Run EmeraldAlert
+        run: python main.py
