@@ -1,5 +1,5 @@
-name: EmeraldAlert Scanner
-
+- name: Run EmeraldAlert
+  run: python main.py --force
 on:
   schedule:
     - cron: '*/45 * * * *'
