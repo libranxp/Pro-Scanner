@@ -12,6 +12,7 @@ concurrency:
 jobs:
   scan-and-alert:
     runs-on: ubuntu-latest
+
     env:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CRYPTO_CHANNEL_ID: ${{ secrets.TELEGRAM_CRYPTO_CHANNEL_ID }}
@@ -41,9 +42,6 @@ jobs:
 
       - name: 📦 Install dependencies
         run: pip install -r requirements.txt
-
-      - name: 🔍 Run Scan (optional)
-        run: python scan.py  # Only if you use a separate scan script
 
       - name: 🚨 Run EmeraldAlert
         run: python main.py --force
