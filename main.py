@@ -1,7 +1,7 @@
 # main.py
 
-from scanner import scan_markets
-from alert_dispatcher import dispatch_alerts
+from alerts.scanner import scan_markets
+from dispatch.alert_dispatcher import dispatch_alerts
 from utils.logger import log
 from utils.health import report_health
 from utils.locks import acquire_lock, release_lock
@@ -9,13 +9,13 @@ from utils.locks import acquire_lock, release_lock
 def main():
     log("🚀 EmeraldAlert scan started.")
 
-    # Concurrency lock to prevent overlapping runs
+    # Prevent overlapping scans
     if not acquire_lock("scan_lock"):
         log("⚠️ Scan already in progress. Exiting.")
         return
 
     try:
-        # Run the market scanner to collect alerts
+        # Run scanner to collect alerts
         alerts = scan_markets()
 
         # Dispatch alerts to all configured channels
@@ -31,6 +31,7 @@ def main():
         report_health(success=False, error=str(e))
 
     finally:
+        # Always release the lock
         release_lock("scan_lock")
 
 if __name__ == "__main__":
