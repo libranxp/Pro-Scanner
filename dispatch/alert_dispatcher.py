@@ -70,6 +70,11 @@ def send_discord_alert(message: str, alert_type: str):
     log(f"📤 Discord [{alert_type}] status: {response.status_code}")
     log(f"📤 Discord response: {response.text}")
 
+def send_admin_alert(message: str):
+    """Send alert to admin channels for errors or health checks."""
+    send_telegram_alert(message, "error")
+    send_discord_alert(message, "error")
+
 def dispatch_alerts(alerts):
     if not alerts:
         log("ℹ️ No alerts to dispatch.")
