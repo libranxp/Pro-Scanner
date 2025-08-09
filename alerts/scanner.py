@@ -1,6 +1,7 @@
-# scanner.py
 import os
 import requests
+from apis.messari import fetch_asset_metrics
+from apis.santiment import fetch_social_volume
 from utils.logger import log
 
 def scan_markets():
@@ -21,7 +22,6 @@ def scan_markets():
                 volume = coin["quote"]["USD"]["volume_24h"]
                 market_cap = coin["quote"]["USD"]["market_cap"]
 
-                # --- Scanning Criteria ---
                 if (
                     abs(change) >= 5 and
                     volume >= 50_000_000 and
@@ -35,26 +35,26 @@ def scan_markets():
                         "volume": round(volume, 2),
                         "market_cap": round(market_cap, 2),
                         "confidence": min(100, abs(change) * 10),
-                        "type": "crypto"
+                        "type": "crypto",
+                        "source": "coinmarketcap"
                     })
         except Exception as e:
             log(f"❌ CMC fetch failed: {e}")
 
-    # --- Stocks: FMP (Financial Modeling Prep) ---
+    # --- Stocks: FMP ---
     fmp_key = os.getenv("FMP_KEY")
     if fmp_key:
         try:
             url = f"https://financialmodelingprep.com/api/v3/stock-screener?marketCapMoreThan=100000000&volumeMoreThan=500000&priceMoreThan=5&apikey={fmp_key}"
             res = requests.get(url)
             data = res.json()
-            for stock in data[:100]:  # Limit to top 100
+            for stock in data[:100]:
                 symbol = stock.get("symbol")
                 price = stock.get("price")
                 change = stock.get("changesPercentage")
                 volume = stock.get("volume")
                 market_cap = stock.get("marketCap")
 
-                # --- Scanning Criteria ---
                 if (
                     symbol and
                     abs(change) >= 2 and
@@ -68,9 +68,41 @@ def scan_markets():
                         "volume": volume,
                         "market_cap": market_cap,
                         "confidence": min(100, abs(change) * 20),
-                        "type": "stocks"
+                        "type": "stocks",
+                        "source": "fmp"
                     })
         except Exception as e:
             log(f"❌ FMP fetch failed: {e}")
+
+    # --- Crypto: Messari (Bitcoin) ---
+    try:
+        btc_metrics = fetch_asset_metrics("bitcoin")
+        change = btc_metrics["data"]["market_data"]["percent_change_usd_last_24_hours"]
+        if abs(change) >= 5:
+            alerts.append({
+                "ticker": "BTC",
+                "price": btc_metrics["data"]["market_data"]["price_usd"],
+                "change": round(change, 2),
+                "confidence": min(100, abs(change) * 10),
+                "type": "crypto",
+                "source": "messari"
+            })
+    except Exception as e:
+        log(f"❌ Messari fetch failed: {e}")
+
+    # --- Crypto: Santiment (Ethereum social volume) ---
+    try:
+        eth_social = fetch_social_volume("ethereum")
+        latest = eth_social["data"]["getMetric"]["timeseriesData"][-1]
+        volume_score = latest["value"]
+        if volume_score >= 100:
+            alerts.append({
+                "ticker": "ETH",
+                "confidence": min(100, int(volume_score)),
+                "type": "crypto",
+                "source": "santiment"
+            })
+    except Exception as e:
+        log(f"❌ Santiment fetch failed: {e}")
 
     return alerts
