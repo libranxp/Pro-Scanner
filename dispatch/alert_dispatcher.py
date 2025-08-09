@@ -1,10 +1,10 @@
-# alert_dispatcher.py
+# dispatch/alert_dispatcher.py
 
-from alert_formatter import enrich_alert_data
-from telegram_dispatcher import send_telegram_alert
-from discord_dispatcher import send_discord_alert
-from validator import validate_alerts
-from notifier import notify_failure
+from alerts.alert_formatter import enrich_alert_data
+from dispatch.telegram_dispatcher import send_telegram_alert
+from dispatch.discord_dispatcher import send_discord_alert
+from dispatch.validator import validate_alerts
+from dispatch.notifier import notify_failure
 from utils.logger import log
 
 def dispatch_alerts(raw_alerts):
