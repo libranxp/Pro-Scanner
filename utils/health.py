@@ -4,11 +4,6 @@ from utils.logger import log
 from dispatch.alert_dispatcher import send_admin_alert
 
 def report_health(success: bool = True, error: str = None):
-    """
-    Reports the health status of the alert system.
-    Logs the result and optionally notifies admins on failure.
-    """
-
     if success:
         log("🟢 Health check passed.")
     else:
