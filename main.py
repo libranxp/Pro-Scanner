@@ -1,13 +1,12 @@
 # main.py
 import os
 import sys
-from datetime import datetime
 from alerts.scanner import scan_markets
-from alerts.validator import validate_alerts
-from alerts.formatter import format_alert
+from dispatch.validator import validate_alerts
+from alerts.alert_formatter import format_alert
 from dispatch.telegram_dispatcher import send_telegram_message
-from dispatch.discord_dispatcher import send_discord_alert  # Optional
-from utils.logger import log  # If you have a logging utility
+from dispatch.discord_dispatcher import send_discord_alert
+from utils.logger import log
 
 def main():
     force_send = "--force" in sys.argv
@@ -41,7 +40,7 @@ def main():
 
         try:
             send_telegram_message(asset_type, message)
-            send_discord_alert(message, asset_type)  # Optional
+            send_discord_alert(message, asset_type)
             log(f"✅ Alert sent for {ticker}")
         except Exception as e:
             log(f"❌ Failed to send alert for {ticker}: {e}")
