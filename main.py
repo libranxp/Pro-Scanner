@@ -1,3 +1,5 @@
+# main.py
+
 from alerts.scanner import scan_markets
 from dispatch.alert_dispatcher import dispatch_alerts
 from utils.logger import log
