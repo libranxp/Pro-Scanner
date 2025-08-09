@@ -1,24 +1,19 @@
-# dispatch/discord_dispatcher.py
+# discord_dispatcher.py
+
 import os
 import requests
+from alert_formatter import format_discord
 from utils.logger import log
 
-WEBHOOKS = {
-    "crypto": os.getenv("DISCORD_CRYPTO_WEBHOOK"),
-    "stocks": os.getenv("DISCORD_STOCKS_WEBHOOK"),
-    "admin": os.getenv("DISCORD_ADMIN_WEBHOOK"),
-}
+DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 
-def send_discord_alert(message: str, channel: str = "crypto"):
-    webhook_url = WEBHOOKS.get(channel)
-    if not webhook_url:
-        log(f"⚠️ No Discord webhook configured for channel: {channel}")
-        return
-
-    payload = {"content": message}
+def send_discord_alert(data, webhook_url=None):
+    embed = format_discord(data)
+    url = webhook_url or DISCORD_WEBHOOK_URL
     try:
-        response = requests.post(webhook_url, json=payload)
-        if response.status_code != 204:
-            log(f"❌ Discord error {response.status_code}: {response.text}")
+        response = requests.post(url, json=embed)
+        response.raise_for_status()
+        log(f"✅ Discord alert sent for {data.get('ticker')}")
     except Exception as e:
-        log(f"❌ Discord dispatch failed: {e}")
+        log(f"❌ Discord alert failed: {e}")
+        raise
