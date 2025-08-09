@@ -44,13 +44,27 @@ jobs:
           fi
           python main.py $FLAGS
         env:
+          ALPHAVANTAGE_KEY: ${{ secrets.ALPHAVANTAGE_KEY }}
+          CMCAL_KEY: ${{ secrets.CMCAL_KEY }}
           CMC_KEY: ${{ secrets.CMC_KEY }}
+          COINGLASS_KEY: ${{ secrets.COINGLASS_KEY }}
+          FINNHUB_KEY: ${{ secrets.FINNHUB_KEY }}
           FMP_KEY: ${{ secrets.FMP_KEY }}
+          LUNARCRUSH_KEY: ${{ secrets.LUNARCRUSH_KEY }}
           MESSARI_API_KEY: ${{ secrets.MESSARI_API_KEY }}
           SANTIMENT_API_KEY: ${{ secrets.SANTIMENT_API_KEY }}
+
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_ADMIN_CHANNEL_ID: ${{ secrets.TELEGRAM_ADMIN_CHANNEL_ID }}
           TELEGRAM_CRYPTO_CHANNEL_ID: ${{ secrets.TELEGRAM_CRYPTO_CHANNEL_ID }}
           TELEGRAM_STOCK_CHANNEL_ID: ${{ secrets.TELEGRAM_STOCK_CHANNEL_ID }}
           TELEGRAM_DEV_CHANNEL_ID: ${{ secrets.TELEGRAM_DEV_CHANNEL_ID }}
 
+          DISCORD_CRYPTO_WEBHOOK: ${{ secrets.DISCORD_CRYPTO_WEBHOOK }}
+          DISCORD_STOCK_WEBHOOK: ${{ secrets.DISCORD_STOCK_WEBHOOK }}
+          DISCORD_ADMIN_ERRORS_WEBHOOK: ${{ secrets.DISCORD_ADMIN_ERRORS_WEBHOOK }}
+          DISCORD_CATALYST_WEBHOOK: ${{ secrets.DISCORD_CATALYST_WEBHOOK }}
+          DISCORD_HOTLIST_WEBHOOK: ${{ secrets.DISCORD_HOTLIST_WEBHOOK }}
+          DISCORD_SENTIMENT_WEBHOOK: ${{ secrets.DISCORD_SENTIMENT_WEBHOOK }}
+          DISCORD_STATUS_WEBHOOK: ${{ secrets.DISCORD_STATUS_WEBHOOK }}
