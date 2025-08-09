@@ -1,8 +1,18 @@
-# apis/coinmarketcap.py
-import requests, os
+import requests
+import os
+from apis.provider_registry import mark_provider_status
+from utils.logger import log
 
-def get_cmc_listings(limit=100):
-    url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest"
-    headers = {"X-CMC_PRO_API_KEY": os.environ["CMC_KEY"]}
-    params = {"limit": limit, "convert": "USD"}
-    return requests.get(url, headers=headers, params=params).json()
+def fetch_data():
+    try:
+        url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest"
+        headers = {"X-CMC_PRO_API_KEY": os.getenv("CMC_KEY")}
+        params = {"limit": 100, "convert": "USD"}
+        res = requests.get(url, headers=headers, params=params)
+        res.raise_for_status()
+        mark_provider_status("coinmarketcap", "online")
+        return res.json()
+    except Exception as e:
+        mark_provider_status("coinmarketcap", "error")
+        log(f"❌ CoinMarketCap fetch failed: {e}")
+        raise
