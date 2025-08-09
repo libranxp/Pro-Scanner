@@ -1,5 +1,3 @@
-# dispatch/alert_dispatcher.py
-
 from alerts.alert_formatter import enrich_alert_data
 from dispatch.telegram_dispatcher import send_telegram_alert
 from dispatch.discord_dispatcher import send_discord_alert
