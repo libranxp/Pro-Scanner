@@ -1,8 +1,8 @@
 # utils/logger.py
 
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 def log(message: str):
-    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"[{timestamp}] {message}")
-
+    bst_time = datetime.now(ZoneInfo("Europe/London")).strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{bst_time} BST] {message}")
