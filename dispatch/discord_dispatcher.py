@@ -1,5 +1,3 @@
-# dispatch/discord_dispatcher.py
-
 from alerts.alert_formatter import format_discord
 from utils.logger import log
 import requests
