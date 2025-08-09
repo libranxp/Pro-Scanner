@@ -1,43 +1,41 @@
 # notifier.py
-from alerts.telegram import send_telegram_alert
-from alerts.discord import send_discord_alert
-from alerts.formatter import format_alert, format_admin_notice
+
+import os
+from alerts.telegram_dispatcher import send_telegram_alert
+from alerts.discord_dispatcher import send_discord_alert
+from alert_formatter import format_telegram, format_discord
 from utils.logger import log
 
-ADMIN_CHANNELS = {
-    "telegram": "YOUR_ADMIN_TELEGRAM_ID",
-    "discord": "YOUR_ADMIN_DISCORD_WEBHOOK"
-}
-
-def send_alerts(alerts):
-    for alert in alerts:
-        message = format_alert(alert)
-        success = True
-
-        try:
-            send_telegram_alert(message)
-        except Exception as e:
-            log(f"Telegram error: {e}")
-            success = False
-
-        try:
-            send_discord_alert(message)
-        except Exception as e:
-            log(f"Discord error: {e}")
-            success = False
-
-        if not success:
-            notify_admin(f"Failed to deliver alert for {alert.get('ticker')}", level="error")
+ADMIN_TELEGRAM_CHAT_ID = os.getenv("ADMIN_TELEGRAM_CHAT_ID")
+ADMIN_DISCORD_WEBHOOK_URL = os.getenv("ADMIN_DISCORD_WEBHOOK_URL")
 
 def notify_admin(message, level="info"):
-    formatted = format_admin_notice(message, level)
+    prefix = "⚠️" if level == "error" else "ℹ️"
+    formatted_text = f"{prefix} *Admin Notification*\n\n{message}"
 
     try:
-        send_telegram_alert(formatted, chat_id=ADMIN_CHANNELS["telegram"])
+        send_telegram_alert({
+            "text": formatted_text,
+            "chat_id": ADMIN_TELEGRAM_CHAT_ID,
+            "parse_mode": "Markdown"
+        })
     except Exception as e:
         log(f"Admin Telegram error: {e}")
 
     try:
-        send_discord_alert(formatted, webhook_url=ADMIN_CHANNELS["discord"])
+        embed = {
+            "username": "EmeraldAlert Admin",
+            "embeds": [{
+                "title": f"{prefix} Admin Notification",
+                "description": message,
+                "color": 0xFFA500 if level == "error" else 0x00BFFF,
+                "footer": {"text": "EmeraldAlert"},
+            }]
+        }
+        send_discord_alert(embed, webhook_url=ADMIN_DISCORD_WEBHOOK_URL)
     except Exception as e:
         log(f"Admin Discord error: {e}")
+
+def notify_failure(context, error):
+    message = f"*Context:* {context}\n*Error:* `{str(error)}`"
+    notify_admin(message, level="error")
