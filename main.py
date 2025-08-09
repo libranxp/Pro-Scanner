@@ -1,52 +1,37 @@
 # main.py
-import os
-import sys
-from alerts.scanner import scan_markets
-from dispatch.validator import validate_alerts
-from alerts.alert_formatter import format_alert
-from dispatch.telegram_dispatcher import send_telegram_message
-from dispatch.discord_dispatcher import send_discord_alert
+
+from scanner import scan_markets
+from alert_dispatcher import dispatch_alerts
 from utils.logger import log
+from utils.health import report_health
+from utils.locks import acquire_lock, release_lock
 
 def main():
-    force_send = "--force" in sys.argv
-    dry_run = "--dry" in sys.argv
-
     log("🚀 EmeraldAlert scan started.")
-    raw_alerts = scan_markets()
-    log(f"📊 Raw alerts found: {len(raw_alerts)}")
 
-    validated = validate_alerts(raw_alerts)
-    log(f"✅ Validated alerts: {len(validated)}")
-
-    if not validated:
-        send_telegram_message("admin", "⚠️ No qualifying alerts found.")
+    # Concurrency lock to prevent overlapping runs
+    if not acquire_lock("scan_lock"):
+        log("⚠️ Scan already in progress. Exiting.")
         return
 
-    for alert in validated:
-        ticker = alert.get("ticker", "UNKNOWN")
-        confidence = alert.get("confidence", 0)
-        asset_type = alert.get("type", "stocks")  # "crypto" or "stocks"
-        message = format_alert(alert)
+    try:
+        # Run the market scanner to collect alerts
+        alerts = scan_markets()
 
-        if not force_send and confidence < 70:
-            log(f"⏭️ Skipping {ticker} — confidence too low ({confidence}%)")
-            continue
+        # Dispatch alerts to all configured channels
+        dispatch_alerts(alerts)
 
-        if dry_run:
-            log(f"[DRY RUN] Would send alert for {ticker}")
-            send_telegram_message("debug", f"[DRY RUN] {message}")
-            continue
+        # Report health status for monitoring
+        report_health(success=True)
 
-        try:
-            send_telegram_message(asset_type, message)
-            send_discord_alert(message, asset_type)
-            log(f"✅ Alert sent for {ticker}")
-        except Exception as e:
-            log(f"❌ Failed to send alert for {ticker}: {e}")
-            send_telegram_message("admin", f"❌ Alert failed for {ticker}: {e}")
+        log("✅ EmeraldAlert scan complete.")
 
-    log("✅ EmeraldAlert scan complete.")
+    except Exception as e:
+        log(f"❌ Scan failed: {e}")
+        report_health(success=False, error=str(e))
+
+    finally:
+        release_lock("scan_lock")
 
 if __name__ == "__main__":
     main()
