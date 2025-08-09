@@ -1,5 +1,3 @@
-# alerts/alert_formatter.py
-
 from datetime import datetime
 
 def format_telegram(data):
@@ -45,23 +43,3 @@ def format_discord(data):
                     {"name": "Catalyst", "value": data['catalyst'], "inline": False},
                     {"name": "Confidence", "value": f"{data['confidence']}%", "inline": True},
                     {"name": "Risk Level", "value": data['risk'], "inline": True},
-                    {"name": "Timestamp", "value": data['timestamp'], "inline": False},
-                ],
-                "footer": {"text": "EmeraldAlert"},
-                "url": data['chart_link']
-            }
-        ]
-    }
-
-def get_color(risk):
-    if "🔴" in risk or "High" in risk:
-        return 0xFF0000
-    elif "🟡" in risk or "Medium" in risk:
-        return 0xFFFF00
-    elif "🟢" in risk or "Low" in risk:
-        return 0x00FF00
-    return 0xCCCCCC
-
-def enrich_alert_data(data):
-    data['timestamp'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
-    return data
