@@ -1,5 +1,3 @@
-# dispatch/telegram_dispatcher.py
-
 from alerts.alert_formatter import format_telegram
 from utils.logger import log
 import requests
