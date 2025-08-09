@@ -1,66 +1,26 @@
-# dispatch/alert_dispatcher.py
-
 import os
 import requests
-from datetime import datetime
-from zoneinfo import ZoneInfo
 from utils.logger import log
 from utils.enrich import enrich_alert_data
 
-# Telegram & Discord credentials
+# Telegram channels
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_ADMIN_CHANNEL_ID = os.getenv("TELEGRAM_ADMIN_CHANNEL_ID")
-DISCORD_ADMIN_ERRORS_WEBHOOK = os.getenv("DISCORD_ADMIN_ERRORS_WEBHOOK")
-TELEGRAM_CRYPTO_CHANNEL_ID = os.getenv("TELEGRAM_CRYPTO_CHANNEL_ID")
-DISCORD_CRYPTO_WEBHOOK = os.getenv("DISCORD_CRYPTO_WEBHOOK")
+TELEGRAM_CHANNELS = {
+    "crypto": os.getenv("TELEGRAM_CRYPTO_CHANNEL_ID"),
+    "stock": os.getenv("TELEGRAM_STOCK_CHANNEL_ID"),
+    "sentiment": os.getenv("TELEGRAM_DEV_CHANNEL_ID"),
+    "catalyst": os.getenv("TELEGRAM_DEV_CHANNEL_ID"),
+    "error": os.getenv("TELEGRAM_ADMIN_CHANNEL_ID"),
+}
 
-def send_admin_alert(title: str, message: str, level: str = "info"):
-    """
-    Sends an admin alert to Telegram and Discord with BST timestamp.
-    """
-    bst_time = datetime.now(ZoneInfo("Europe/London")).strftime("%Y-%m-%d %H:%M:%S")
-    full_message = f"{title}\n{message}\n\n🕒 Timestamp: {bst_time} BST"
-
-    # Telegram
-    if TELEGRAM_BOT_TOKEN and TELEGRAM_ADMIN_CHANNEL_ID:
-        try:
-            url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-            payload = {
-                "chat_id": TELEGRAM_ADMIN_CHANNEL_ID,
-                "text": full_message,
-                "parse_mode": "Markdown"
-            }
-            response = requests.post(url, json=payload)
-            response.raise_for_status()
-            log("📨 Admin alert sent to Telegram.")
-        except Exception as e:
-            log(f"⚠️ Failed to send Telegram admin alert: {e}")
-
-    # Discord
-    if DISCORD_ADMIN_ERRORS_WEBHOOK:
-        try:
-            payload = {"content": full_message}
-            response = requests.post(DISCORD_ADMIN_ERRORS_WEBHOOK, json=payload)
-            response.raise_for_status()
-            log("📨 Admin alert sent to Discord.")
-        except Exception as e:
-            log(f"⚠️ Failed to send Discord admin alert: {e}")
-
-def dispatch_alerts(alerts):
-    """
-    Dispatches enriched alerts to Telegram and Discord.
-    """
-    if not alerts:
-        log("ℹ️ No alerts to dispatch.")
-        return
-
-    log(f"📊 Dispatching {len(alerts)} alerts...")
-
-    for raw_alert in alerts:
-        enriched = enrich_alert_data(raw_alert)
-        message = format_alert(enriched)
-        send_telegram_alert(message)
-        send_discord_alert(message)
+# Discord webhooks
+DISCORD_WEBHOOKS = {
+    "crypto": os.getenv("DISCORD_CRYPTO_WEBHOOK"),
+    "stock": os.getenv("DISCORD_STOCK_WEBHOOK"),
+    "sentiment": os.getenv("DISCORD_SENTIMENT_WEBHOOK"),
+    "catalyst": os.getenv("DISCORD_CATALYST_WEBHOOK"),
+    "error": os.getenv("DISCORD_ADMIN_ERRORS_WEBHOOK"),
+}
 
 def format_alert(alert):
     return (
@@ -81,29 +41,46 @@ def format_alert(alert):
         f"⏱️ Timestamp: {alert['timestamp']} UTC"
     )
 
-def send_telegram_alert(message: str):
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CRYPTO_CHANNEL_ID:
-        log("❌ Telegram credentials missing.")
+def send_telegram_alert(message: str, alert_type: str):
+    channel_id = TELEGRAM_CHANNELS.get(alert_type)
+    if not TELEGRAM_BOT_TOKEN or not channel_id:
+        log(f"❌ Telegram routing failed for type: {alert_type}")
         return
 
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
-        "chat_id": TELEGRAM_CRYPTO_CHANNEL_ID,
+        "chat_id": channel_id,
         "text": message,
         "parse_mode": "Markdown",
         "disable_web_page_preview": True
     }
 
     response = requests.post(url, json=payload)
-    log(f"📤 Telegram status: {response.status_code}")
+    log(f"📤 Telegram [{alert_type}] status: {response.status_code}")
     log(f"📤 Telegram response: {response.text}")
 
-def send_discord_alert(message: str):
-    if not DISCORD_CRYPTO_WEBHOOK:
-        log("❌ Discord webhook missing.")
+def send_discord_alert(message: str, alert_type: str):
+    webhook = DISCORD_WEBHOOKS.get(alert_type)
+    if not webhook:
+        log(f"❌ Discord routing failed for type: {alert_type}")
         return
 
     payload = {"content": message}
-    response = requests.post(DISCORD_CRYPTO_WEBHOOK, json=payload)
-    log(f"📤 Discord status: {response.status_code}")
+    response = requests.post(webhook, json=payload)
+    log(f"📤 Discord [{alert_type}] status: {response.status_code}")
     log(f"📤 Discord response: {response.text}")
+
+def dispatch_alerts(alerts):
+    if not alerts:
+        log("ℹ️ No alerts to dispatch.")
+        return
+
+    log(f"📊 Dispatching {len(alerts)} alerts...")
+
+    for raw_alert in alerts:
+        enriched = enrich_alert_data(raw_alert)
+        alert_type = enriched.get("type", "crypto")
+        message = format_alert(enriched)
+
+        send_telegram_alert(message, alert_type)
+        send_discord_alert(message, alert_type)
