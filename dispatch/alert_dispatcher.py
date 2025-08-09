@@ -14,7 +14,6 @@ def send_admin_alert(title: str, message: str, level: str = "info"):
     """
     Sends an admin alert to Telegram and Discord with BST timestamp.
     """
-
     bst_time = datetime.now(ZoneInfo("Europe/London")).strftime("%Y-%m-%d %H:%M:%S")
     full_message = f"{title}\n{message}\n\n🕒 Timestamp: {bst_time} BST"
 
@@ -42,3 +41,17 @@ def send_admin_alert(title: str, message: str, level: str = "info"):
         log("📨 Admin alert sent to Discord.")
     except Exception as e:
         log(f"⚠️ Failed to send Discord alert: {e}")
+
+def dispatch_alerts(alerts: list):
+    """
+    Dispatches a list of alerts to Telegram and Discord.
+    Each alert should be a dictionary with 'title' and 'message'.
+    """
+    if not alerts:
+        log("ℹ️ No alerts to dispatch.")
+        return
+
+    for alert in alerts:
+        title = alert.get("title", "🚨 Alert")
+        message = alert.get("message", "")
+        send_admin_alert(title, message, level="info")
