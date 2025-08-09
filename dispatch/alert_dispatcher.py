@@ -11,6 +11,8 @@ TELEGRAM_CHANNELS = {
     "sentiment": os.getenv("TELEGRAM_DEV_CHANNEL_ID"),
     "catalyst": os.getenv("TELEGRAM_DEV_CHANNEL_ID"),
     "error": os.getenv("TELEGRAM_ADMIN_CHANNEL_ID"),
+    "breakout": os.getenv("TELEGRAM_STOCK_CHANNEL_ID"),
+    "gap up": os.getenv("TELEGRAM_STOCK_CHANNEL_ID"),
 }
 
 # Discord webhooks
@@ -20,6 +22,8 @@ DISCORD_WEBHOOKS = {
     "sentiment": os.getenv("DISCORD_SENTIMENT_WEBHOOK"),
     "catalyst": os.getenv("DISCORD_CATALYST_WEBHOOK"),
     "error": os.getenv("DISCORD_ADMIN_ERRORS_WEBHOOK"),
+    "breakout": os.getenv("DISCORD_STOCK_WEBHOOK"),
+    "gap up": os.getenv("DISCORD_STOCK_WEBHOOK"),
 }
 
 def format_alert(alert):
@@ -71,7 +75,6 @@ def send_discord_alert(message: str, alert_type: str):
     log(f"📤 Discord response: {response.text}")
 
 def send_admin_alert(message: str):
-    """Send alert to admin channels for errors or health checks."""
     send_telegram_alert(message, "error")
     send_discord_alert(message, "error")
 
