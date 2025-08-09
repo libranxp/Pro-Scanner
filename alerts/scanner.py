@@ -40,6 +40,8 @@ def scan_markets():
                     })
         except Exception as e:
             log(f"❌ CMC fetch failed: {e}")
+    else:
+        log("⚠️ Missing CMC_KEY")
 
     # --- Stocks: FMP ---
     fmp_key = os.getenv("FMP_KEY")
@@ -73,36 +75,46 @@ def scan_markets():
                     })
         except Exception as e:
             log(f"❌ FMP fetch failed: {e}")
+    else:
+        log("⚠️ Missing FMP_KEY")
 
     # --- Crypto: Messari (Bitcoin) ---
-    try:
-        btc_metrics = fetch_asset_metrics("bitcoin")
-        change = btc_metrics["data"]["market_data"]["percent_change_usd_last_24_hours"]
-        if abs(change) >= 5:
-            alerts.append({
-                "ticker": "BTC",
-                "price": btc_metrics["data"]["market_data"]["price_usd"],
-                "change": round(change, 2),
-                "confidence": min(100, abs(change) * 10),
-                "type": "crypto",
-                "source": "messari"
-            })
-    except Exception as e:
-        log(f"❌ Messari fetch failed: {e}")
+    messari_key = os.getenv("MESSARI_API_KEY")
+    if messari_key:
+        try:
+            btc_metrics = fetch_asset_metrics("bitcoin", messari_key)
+            change = btc_metrics["data"]["market_data"]["percent_change_usd_last_24_hours"]
+            if abs(change) >= 5:
+                alerts.append({
+                    "ticker": "BTC",
+                    "price": btc_metrics["data"]["market_data"]["price_usd"],
+                    "change": round(change, 2),
+                    "confidence": min(100, abs(change) * 10),
+                    "type": "crypto",
+                    "source": "messari"
+                })
+        except Exception as e:
+            log(f"❌ Messari fetch failed: {e}")
+    else:
+        log("⚠️ Missing MESSARI_API_KEY")
 
     # --- Crypto: Santiment (Ethereum social volume) ---
-    try:
-        eth_social = fetch_social_volume("ethereum")
-        latest = eth_social["data"]["getMetric"]["timeseriesData"][-1]
-        volume_score = latest["value"]
-        if volume_score >= 100:
-            alerts.append({
-                "ticker": "ETH",
-                "confidence": min(100, int(volume_score)),
-                "type": "crypto",
-                "source": "santiment"
-            })
-    except Exception as e:
-        log(f"❌ Santiment fetch failed: {e}")
+    santiment_key = os.getenv("SANTIMENT_API_KEY")
+    if santiment_key:
+        try:
+            eth_social = fetch_social_volume("ethereum", santiment_key)
+            latest = eth_social["data"]["getMetric"]["timeseriesData"][-1]
+            volume_score = latest["value"]
+            if volume_score >= 100:
+                alerts.append({
+                    "ticker": "ETH",
+                    "confidence": min(100, int(volume_score)),
+                    "type": "crypto",
+                    "source": "santiment"
+                })
+        except Exception as e:
+            log(f"❌ Santiment fetch failed: {e}")
+    else:
+        log("⚠️ Missing SANTIMENT_API_KEY")
 
     return alerts
