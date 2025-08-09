@@ -1,6 +1,6 @@
 # main.py
 
-from alerts.scanner import scan_markets
+from core.scanner import scan_markets
 from dispatch.alert_dispatcher import dispatch_alerts
 from utils.logger import log
 from utils.health import report_health
@@ -15,6 +15,7 @@ def main():
 
     try:
         alerts = scan_markets()
+        log(f"📊 Total alerts found: {len(alerts)}")
         dispatch_alerts(alerts)
         report_health(success=True)
         log("✅ EmeraldAlert scan complete.")
