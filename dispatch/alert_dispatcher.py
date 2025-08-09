@@ -1,24 +1,44 @@
-from alerts.alert_formatter import enrich_alert_data
-from dispatch.telegram_dispatcher import send_telegram_alert
-from dispatch.discord_dispatcher import send_discord_alert
-from dispatch.validator import validate_alerts
-from dispatch.notifier import notify_failure
+# dispatch/alert_dispatcher.py
+
+import requests
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from utils.logger import log
 
-def dispatch_alerts(raw_alerts):
+# Replace with your actual tokens and channel IDs
+TELEGRAM_BOT_TOKEN = "your-telegram-bot-token"
+TELEGRAM_CHAT_ID = "your-telegram-chat-id"
+DISCORD_WEBHOOK_URL = "your-discord-webhook-url"
+
+def send_admin_alert(title: str, message: str, level: str = "info"):
+    """
+    Sends an admin alert to Telegram and Discord with BST timestamp.
+    """
+
+    bst_time = datetime.now(ZoneInfo("Europe/London")).strftime("%Y-%m-%d %H:%M:%S")
+    full_message = f"{title}\n{message}\n\n🕒 Timestamp: {bst_time} BST"
+
+    # Telegram
     try:
-        valid_alerts = validate_alerts(raw_alerts)
-        if not valid_alerts:
-            log("⚠️ No valid alerts to dispatch.")
-            return
-
-        for alert in valid_alerts:
-            enriched = enrich_alert_data(alert)
-            try:
-                send_telegram_alert(enriched)
-                send_discord_alert(enriched)
-            except Exception as e:
-                notify_failure(f"Dispatch failed for {alert.get('ticker')}", e)
-
+        telegram_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        telegram_payload = {
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": full_message,
+            "parse_mode": "Markdown"
+        }
+        response = requests.post(telegram_url, json=telegram_payload)
+        response.raise_for_status()
+        log("📨 Admin alert sent to Telegram.")
     except Exception as e:
-        notify_failure("Alert validation or dispatch pipeline failed", e)
+        log(f"⚠️ Failed to send Telegram alert: {e}")
+
+    # Discord
+    try:
+        discord_payload = {
+            "content": full_message
+        }
+        response = requests.post(DISCORD_WEBHOOK_URL, json=discord_payload)
+        response.raise_for_status()
+        log("📨 Admin alert sent to Discord.")
+    except Exception as e:
+        log(f"⚠️ Failed to send Discord alert: {e}")
