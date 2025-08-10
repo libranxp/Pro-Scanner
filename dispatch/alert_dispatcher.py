@@ -3,14 +3,19 @@ import requests
 from utils.logger import log
 from utils.enrich import enrich_alert_data
 
+# Telegram channels
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHANNELS = {
     "crypto": os.getenv("TELEGRAM_CRYPTO_CHANNEL_ID"),
     "stock": os.getenv("TELEGRAM_STOCK_CHANNEL_ID"),
+    "error": os.getenv("TELEGRAM_ADMIN_CHANNEL_ID"),
 }
+
+# Discord webhooks
 DISCORD_WEBHOOKS = {
     "crypto": os.getenv("DISCORD_CRYPTO_WEBHOOK"),
     "stock": os.getenv("DISCORD_STOCK_WEBHOOK"),
+    "error": os.getenv("DISCORD_ADMIN_ERRORS_WEBHOOK"),
 }
 
 def format_alert(alert):
@@ -54,6 +59,11 @@ def send_discord_alert(message, alert_type):
         log(f"❌ Discord routing failed for type: {alert_type}")
         return
     requests.post(webhook, json={"content": message})
+
+def send_admin_alert(message):
+    """Send alert to admin channels for errors or health checks."""
+    send_telegram_alert(message, "error")
+    send_discord_alert(message, "error")
 
 def dispatch_alerts(alerts):
     for raw in alerts:
