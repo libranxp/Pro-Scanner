@@ -3,14 +3,12 @@ from utils.logger import log
 
 def report_health(success=True, error=None):
     if success:
-        message = "✅ Alert system health check passed."
+        message = "✅ EmeraldAlert scan completed successfully."
     else:
-        message = f"❌ Alert system health check failed: {error}"
+        message = f"❌ EmeraldAlert scan failed:\n\n{error}"
 
     try:
         send_admin_alert(message)
         log(f"📤 Health report sent: {message}")
     except Exception as e:
         log(f"❌ Failed to send health report: {e}")
-
-
