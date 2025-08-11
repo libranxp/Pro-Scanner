@@ -1,31 +1,31 @@
-import os
 import requests
+import os
 
-# Load secrets from environment
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 DISCORD_WEBHOOK = os.getenv("DISCORD_WEBHOOK")
 
 def send_to_telegram(message):
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        raise ValueError("Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID")
+
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
         "text": message,
         "parse_mode": "Markdown"
     }
-    try:
-        requests.post(url, json=payload, timeout=5)
-    except Exception as e:
-        print(f"[TELEGRAM ERROR] {e}")
+
+    response = requests.post(url, json=payload)
+    print(f"[TELEGRAM] Status {response.status_code} | {response.text}")
 
 def send_to_discord(message):
-    payload = {
-        "content": message
-    }
-    try:
-        requests.post(DISCORD_WEBHOOK, json=payload, timeout=5)
-    except Exception as e:
-        print(f"[DISCORD ERROR] {e}")
+    if not DISCORD_WEBHOOK:
+        raise ValueError("Missing DISCORD_WEBHOOK")
+
+    payload = {"content": message}
+    response = requests.post(DISCORD_WEBHOOK, json=payload)
+    print(f"[DISCORD] Status {response.status_code} | {response.text}")
 
 def send_to_channel(channel, message):
     if channel == "telegram":
@@ -33,4 +33,4 @@ def send_to_channel(channel, message):
     elif channel == "discord":
         send_to_discord(message)
     else:
-        print(f"[NO ROUTE] Channel '{channel}' not recognized. Message:\n{message}")
+        raise ValueError(f"Unknown channel: {channel}")
