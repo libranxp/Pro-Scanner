@@ -1,28 +1,28 @@
-from alerts.scanner import scan_markets
-from dispatch.alert_dispatcher import dispatch_alerts
+from alerts.scanner import scan_stocks, scan_crypto
+from utils.enrich import enrich_ticker
+from dispatch.alert_dispatcher import dispatch_alert
 from utils.logger import log
-from utils.health import report_health
-from utils.locks import acquire_lock, release_lock
 
-def main():
-    log("🚀 EmeraldAlert scan started.")
+def run_alert_engine():
+    log("🚀 Starting EmeraldAlert engine...")
 
-    if not acquire_lock("scan_lock"):
-        log("⚠️ Scan already in progress. Exiting.")
-        return
+    stock_candidates = scan_stocks()
+    crypto_candidates = scan_crypto()
 
-    try:
-        alerts = scan_markets()
-        log(f"📊 Total alerts found: {len(alerts)}")
-        dispatch_alerts(alerts)
-        report_health(success=True)
-        log("✅ EmeraldAlert scan complete.")
-    except Exception as e:
-        log(f"❌ Scan failed: {e}")
-        report_health(success=False, error=str(e))
-    finally:
-        release_lock("scan_lock")
+    all_alerts = []
+
+    for ticker in stock_candidates:
+        enriched = enrich_ticker(ticker, "stock", {"type": "stock"})
+        all_alerts.append(enriched)
+
+    for ticker in crypto_candidates:
+        enriched = enrich_ticker(ticker, "crypto", {"type": "crypto"})
+        all_alerts.append(enriched)
+
+    for alert in all_alerts:
+        dispatch_alert(alert)
+
+    log(f"✅ Dispatched {len(all_alerts)} alerts.")
 
 if __name__ == "__main__":
-    main()
-
+    run_alert_engine()
