@@ -1,15 +1,18 @@
 from utils.channel_router import send_to_channel
 
 def dispatch_alert(alert):
-    ticker = alert.get("ticker", "UNKNOWN")
-    channel = alert.get("channel", "telegram")  # Default to Telegram if not specified
+    ticker = alert["ticker"]
+    entry = alert["entry"]
+    stop = alert["stop"]
+    target = alert["target"]
+    channel = alert["channel"]
 
     message = (
-        f"🚨 Alert for {ticker}\n"
-        f"Entry: ${alert.get('entry', 'N/A')} | "
-        f"Stop: ${alert.get('stop', 'N/A')} | "
-        f"Target: ${alert.get('target', 'N/A')}"
+        f"🚨 *{ticker} Signal*\n"
+        f"Entry: ${entry:.2f}\n"
+        f"Stop: ${stop:.2f}\n"
+        f"Target: ${target:.2f}"
     )
 
-    print(f"[DISPATCH] Sending alert for {ticker} to {channel}...")
+    print(f"[DISPATCH] Alert for {ticker} → {channel}")
     send_to_channel(channel, message)
