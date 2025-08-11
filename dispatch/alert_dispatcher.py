@@ -16,6 +16,15 @@ DISCORD_WEBHOOKS = {
     "stock": os.getenv("DISCORD_STOCK_WEBHOOK"),
 }
 
+REQUIRED_KEYS = [
+    "ticker", "asset_type", "price", "entry", "stop", "target1", "target2",
+    "vol_spike", "rsi", "macd", "ema_stack", "vwap_reclaim", "orderbook_wall",
+    "orderbook_exchange", "btc_correlation", "exchange", "sentiment_surge",
+    "catalyst", "sentiment_analysis", "risk_level", "confidence",
+    "chart_link", "catalyst_link", "catalyst_link_text", "sentiment_link",
+    "timestamp", "type"
+]
+
 def format_alert(alert):
     return (
         f"🚨 SCALP ALERT — {alert['ticker']} ({alert['asset_type']})\n\n"
@@ -64,6 +73,11 @@ def send_discord_alert(message, alert_type):
     print(f"[DISCORD] {alert_type} → {response.status_code}")
 
 def dispatch_alert(alert):
+    missing_keys = [key for key in REQUIRED_KEYS if key not in alert]
+    if missing_keys:
+        print(f"[ERROR] Alert missing keys: {missing_keys}")
+        return
+
     alert_type = alert["type"]
     message = format_alert(alert)
 
